@@ -7,5 +7,5 @@ from BeefyREST.urls import api
 urlpatterns = [
     path('', index),
     path('admin/', admin.site.urls),
-    path('api/', api.urls, name='Endpoints')
+    path('api/', api.urls, name='Endpoints'),
 ]
