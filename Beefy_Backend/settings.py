@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-9r1cj5coldnv0r*ena&nri#_3q=1uz!n4w7jw)9_qsnp(jwp3^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # REST FRAMEWORK SETTINGS
@@ -67,6 +67,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'Beefy_Backend.urls'

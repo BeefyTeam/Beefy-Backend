@@ -1,15 +1,27 @@
 import random
 import rest_framework_simplejwt.exceptions
-from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 
-from ninja.security import HttpBearer
 from ninja import Router
 from rest_framework_simplejwt.serializers import TokenVerifySerializer, TokenRefreshSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
 from BeefyREST import Schemas as SchemasBody
 from django.shortcuts import render
 from ninja import NinjaAPI
+
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # Add custom claims
+        token['email'] = user.username
+        token['tipe'] = 'penjual' if user.is_staff else 'pembeli'
+
+        return token
+
 
 # Create your views here.
 def index(request):
@@ -30,11 +42,13 @@ def index(request):
     }
     return render(request=request, template_name='index.html', context=contexs)
 
+
 # Authentication Router
 router = Router(
     tags=['Authentication']
 )
 app = NinjaAPI()
+
 
 def validTokenCheck(token: str) -> bool:
     validasi = TokenVerifySerializer()
@@ -45,27 +59,21 @@ def validTokenCheck(token: str) -> bool:
         return True
     except:
         return False
-class AuthBearer(HttpBearer):
-    def authenticate(self, request, token):
-        if (validTokenCheck(token=token)):
-            return None
-        else:
-            pass
+
 
 @router.post("/login")
 def login(request, payload: SchemasBody.LoginBody):
-    user = authenticate(username=payload.email, password=payload.password)
-    if (user == None):
+    try:
+        obtainObj = MyTokenObtainPairSerializer()
+        token = obtainObj.validate(attrs={'username': payload.email, 'password': payload.password})
+    except:
         return app.create_response(
             request,
-            {'message': 'wrong email or password'},
+            {'message': 'Wrong email or password'},
             status=401
         )
-    refresh = RefreshToken.for_user(user=user)
-    return {
-        'refresh': str(refresh),
-        'access': str(refresh.access_token),
-    }
+    return token
+
 
 @router.post('/refresh-token')
 def refresh_token(request, payload: SchemasBody.RefreshBody):
@@ -77,13 +85,15 @@ def refresh_token(request, payload: SchemasBody.RefreshBody):
     except rest_framework_simplejwt.exceptions.TokenError:
         return app.create_response(
             request,
-            {'message': 'Token has wrong type or expired or invalid, please login again to get refresh and access token'},
+            {
+                'message': 'Token has wrong type or expired or invalid, please login again to get refresh and access token'},
             status=400
         )
 
     return {'token_access': str(new_token.get('access'))}
 
-@router.post("/valid-token")
+
+@router.post("/check-valid-token")
 def valid(request, payload: SchemasBody.Validbody):
     if (validTokenCheck(token=payload.token)):
         return {'message': 'yes token is valid'}
@@ -97,6 +107,12 @@ def valid(request, payload: SchemasBody.Validbody):
 
 @router.post("/register")
 def register(request, payload: SchemasBody.RegisterBody):
+    if (payload.tipe not in ['pembeli', 'penjua;']):
+        return app.create_response(
+            request,
+            {'message': "tipe harus 'pembeli' atau 'penjual' "},
+            status=400
+        )
     try:
         userNew = User.objects.create_user(
             username=payload.email,
