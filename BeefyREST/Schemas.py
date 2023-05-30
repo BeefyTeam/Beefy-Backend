@@ -14,3 +14,7 @@ class RefreshBody(Schema):
 
 class Validbody(Schema):
     token: str = 'token'
+
+class ForgotPassword(Schema):
+    id: str
+    new_password: str

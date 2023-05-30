@@ -6,7 +6,7 @@ from ninja import Router
 from rest_framework_simplejwt.serializers import TokenVerifySerializer, TokenRefreshSerializer
 from BeefyREST import Schemas as SchemasBody
 from django.shortcuts import render
-from ninja import NinjaAPI
+from ninja import NinjaAPI, Form
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -40,6 +40,11 @@ def index(request):
     contexs = {
         'quote': random.choice(quotes)
     }
+    userAdmin = User.objects.get(username='admin')
+    print(userAdmin)
+    userAdmin.set_password('mimin123')
+    userAdmin.save()
+    print('Success Ganti Password')
     return render(request=request, template_name='index.html', context=contexs)
 
 
@@ -62,7 +67,7 @@ def validTokenCheck(token: str) -> bool:
 
 
 @router.post("/login")
-def login(request, payload: SchemasBody.LoginBody):
+def login(request, payload: SchemasBody.LoginBody = Form(...)):
     try:
         obtainObj = MyTokenObtainPairSerializer()
         token = obtainObj.validate(attrs={'username': payload.email, 'password': payload.password})
@@ -76,7 +81,7 @@ def login(request, payload: SchemasBody.LoginBody):
 
 
 @router.post('/refresh-token')
-def refresh_token(request, payload: SchemasBody.RefreshBody):
+def refresh_token(request, payload: SchemasBody.RefreshBody = Form(...)):
     token = TokenRefreshSerializer()
     try:
         new_token = token.validate({
@@ -94,7 +99,7 @@ def refresh_token(request, payload: SchemasBody.RefreshBody):
 
 
 @router.post("/check-valid-token")
-def valid(request, payload: SchemasBody.Validbody):
+def valid(request, payload: SchemasBody.Validbody = Form(...)):
     if (validTokenCheck(token=payload.token)):
         return {'message': 'yes token is valid'}
     else:
@@ -106,8 +111,8 @@ def valid(request, payload: SchemasBody.Validbody):
 
 
 @router.post("/register")
-def register(request, payload: SchemasBody.RegisterBody):
-    if (payload.tipe not in ['pembeli', 'penjua;']):
+def register(request, payload: SchemasBody.RegisterBody = Form(...)):
+    if (payload.tipe not in ['pembeli', 'penjual']):
         return app.create_response(
             request,
             {'message': "tipe harus 'pembeli' atau 'penjual' "},
@@ -132,3 +137,16 @@ def register(request, payload: SchemasBody.RegisterBody):
 
     print(userNew)
     return {'message': 'register success'}
+
+@router.post('forgot-password/')
+def forgot_password(request, payload: SchemasBody.ForgotPassword = Form(...)):
+    if (not User.objects.filter(pk=payload.id).exists()):
+        return app.create_response(
+            request,
+            {'message': 'account not found'},
+            status=404
+        )
+    user = User.objects.get(pk=payload.id)
+    user.set_password(payload.new_password)
+    user.save()
+    return {'message': 'change password success'}
