@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 from ninja import Router
 from rest_framework_simplejwt.serializers import TokenVerifySerializer, TokenRefreshSerializer
-from BeefyREST import Schemas as SchemasBody
+from BeefyREST import schemas as SchemasBody
 from django.shortcuts import render
 from ninja import NinjaAPI, Form
 
@@ -77,7 +77,12 @@ def login(request, payload: SchemasBody.LoginBody = Form(...)):
             {'message': 'Wrong email or password'},
             status=401
         )
-    return token
+    userObj = User.objects.get(username=payload.email)
+    additional = {
+        'id_user': userObj.pk,
+        'jenis_akun': 'penjual' if userObj.is_staff else 'pembeli'
+    }
+    return additional | token
 
 
 @router.post('/refresh-token')
@@ -85,7 +90,7 @@ def refresh_token(request, payload: SchemasBody.RefreshBody = Form(...)):
     token = TokenRefreshSerializer()
     try:
         new_token = token.validate({
-            'refresh': payload.token
+            'refresh': payload.token_refresh
         })
     except rest_framework_simplejwt.exceptions.TokenError:
         return app.create_response(
@@ -110,43 +115,15 @@ def valid(request, payload: SchemasBody.Validbody = Form(...)):
         )
 
 
-@router.post("/register")
-def register(request, payload: SchemasBody.RegisterBody = Form(...)):
-    if (payload.tipe not in ['pembeli', 'penjual']):
-        return app.create_response(
-            request,
-            {'message': "tipe harus 'pembeli' atau 'penjual' "},
-            status=400
-        )
-    try:
-        userNew = User.objects.create_user(
-            username=payload.email,
-            email='account@email.com',
-            password=payload.password,
-        )
-    except:
-        return app.create_response(
-            request,
-            {'message': 'account already exists'},
-            status=409
-        )
-
-    if (payload.tipe == 'penjual'):
-        userNew.is_staff = True
-        userNew.save()
-
-    print(userNew)
-    return {'message': 'register success'}
-
 @router.post('forgot-password/')
-def forgot_password(request, payload: SchemasBody.ForgotPassword = Form(...)):
-    if (not User.objects.filter(pk=payload.id).exists()):
+def forgot_password(request, payload: SchemasBody.ForgotPasswordBody = Form(...)):
+    if (not User.objects.filter(username=payload.email).exists()):
         return app.create_response(
             request,
             {'message': 'account not found'},
             status=404
         )
-    user = User.objects.get(pk=payload.id)
+    user = User.objects.get(username=payload.email)
     user.set_password(payload.new_password)
     user.save()
     return {'message': 'change password success'}

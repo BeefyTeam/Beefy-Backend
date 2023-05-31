@@ -1,3 +1,117 @@
-from django.shortcuts import render
+from django.contrib.auth.models import User
+from Pembeli import schemas as SchemasBody
+from Pembeli.models import PembeliDB
+from ninja import Router
+from ninja import Form, NinjaAPI
+import requests
+
+app = NinjaAPI()
 
 # Create your views here.
+
+router = Router(
+    tags=['Pembeli endpoints']
+)
+
+
+@router.post("/register-pembeli")
+def register(request, payload: SchemasBody.RegisterBody = Form(...)):
+    try:
+        userNew = User.objects.create_user(
+            username=payload.email,
+            email='account@email.com',
+            password=payload.password,
+        )
+        userNew.is_staff = False
+        userNew.save()
+    except:
+        return app.create_response(
+            request,
+            {'message': f'account with email {payload.email} already exists'},
+            status=409
+        )
+    pembeliNew = PembeliDB.objects.create(
+        nama=payload.nama,
+        nama_penerima=payload.nama,
+        alamat_lengkap='None',
+        nomor_telp='None',
+        label_alamat='None',
+        photo_profile='None',
+        ID_USER=userNew
+    )
+    return {
+        'message': 'register success',
+        'id_pembeli': pembeliNew.ID_USER.pk
+    }
+
+
+@router.post('/edit-pembeli')
+def editPembelit(request, payload: SchemasBody.EditAlamatBody = Form(...)):
+    print(payload.id_pembeli)
+    pembeliObj = PembeliDB.objects.filter(ID_USER_id=int(payload.id_pembeli)).exists()
+    if (pembeliObj):
+        pembeliObj = PembeliDB.objects.get(ID_USER_id=payload.id_pembeli)
+        pembeliObj.nama = payload.nama
+        pembeliObj.alamat_lengkap = payload.alamat_lengkap
+        pembeliObj.nama_penerima = payload.nama_penerima
+        pembeliObj.nomor_telp = payload.nomor_telp
+        pembeliObj.label_alamat = payload.label_alamat
+        pembeliObj.save()
+    else:
+        return app.create_response(
+            request,
+            {'message': f'Pembeli with id {payload.id_pembeli} Not Found'},
+            status=404
+        )
+    return {'message': f'Success edit alamat for pembeli id {payload.id_pembeli}'}
+
+
+from ninja import File
+from ninja.files import UploadedFile
+
+
+@router.post('edit-pp-pembeli')
+def editPhotoPembeli(request, id_pembeli: int = Form(...), file: UploadedFile = File(...)):
+    userPembeliObj = PembeliDB.objects.filter(ID_USER_id=id_pembeli).exists()
+    if (userPembeliObj):
+        responeImgBB = requests.post('https://api.imgbb.com/1/upload', params={
+            'key': '1a30bea6baf246a32e390350c7efa81c'
+        }, files={
+            'image': file.read()
+        }).json()
+        urlGambar = responeImgBB['data']['display_url']
+
+        userPembeliObj = PembeliDB.objects.get(ID_USER_id=id_pembeli)
+        userPembeliObj.photo_profile = urlGambar
+        userPembeliObj.save()
+    else:
+        return app.create_response(
+            request,
+            {'message': f'User pembeli with id {id_pembeli} not found'},
+            status=404
+        )
+    return {'message': 'Success Edit photo profile'}
+
+
+@router.get('user/detail/{id}')
+def getPembeliDetail(request, id: int):
+    userObj = PembeliDB.objects.filter(ID_USER_id=id).exists()
+    if (not userObj):
+        return app.create_response(
+            request,
+            {'message': f'User pembeli with id {id}'},
+            status=404
+        )
+    userObj = PembeliDB.objects.get(ID_USER_id=id)
+    responseBody = {
+        'nama': userObj.nama,
+        'alamat_lengkap': userObj.alamat_lengkap,
+        'nama_penerima': userObj.nama_penerima,
+        'nomor_telp': userObj.nomor_telp,
+        'label_alamat': userObj.label_alamat,
+        'photo_profile': userObj.photo_profile,
+        'user_account': {'email': userObj.ID_USER.username}
+    }
+    return responseBody
+
+
