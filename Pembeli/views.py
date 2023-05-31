@@ -18,7 +18,7 @@ router = Router(
 )
 
 
-@router.post("/register-pembeli")
+@router.post("register-pembeli/")
 def register(request, payload: SchemasBody.RegisterBody = Form(...)):
     try:
         userNew = User.objects.create_user(
@@ -49,7 +49,7 @@ def register(request, payload: SchemasBody.RegisterBody = Form(...)):
     }
 
 
-@router.post('/edit-pembeli')
+@router.post('edit-pembeli/')
 def editPembelit(request, payload: SchemasBody.EditAlamatBody = Form(...)):
     print(payload.id_pembeli)
     pembeliObj = PembeliDB.objects.filter(ID_USER_id=int(payload.id_pembeli)).exists()
@@ -70,7 +70,7 @@ def editPembelit(request, payload: SchemasBody.EditAlamatBody = Form(...)):
     return {'message': f'Success edit alamat for pembeli id {payload.id_pembeli}'}
 
 
-@router.post('edit-pp-pembeli')
+@router.post('edit-pp-pembeli/')
 def editPhotoPembeli(request, id_pembeli: int = Form(...), file: UploadedFile = File(...)):
     userPembeliObj = PembeliDB.objects.filter(ID_USER_id=id_pembeli).exists()
     if (userPembeliObj):
@@ -99,7 +99,7 @@ def getPembeliDetail(request, id: int):
     if (not userObj):
         return app.create_response(
             request,
-            {'message': f'User pembeli with id {id}'},
+            {'message': f'User pembeli with id {id} not found'},
             status=404
         )
     userObj = PembeliDB.objects.get(ID_USER_id=id)
@@ -110,12 +110,15 @@ def getPembeliDetail(request, id: int):
         'nomor_telp': userObj.nomor_telp,
         'label_alamat': userObj.label_alamat,
         'photo_profile': userObj.photo_profile,
-        'user_account': {'email': userObj.ID_USER.username}
+        'user_account': {
+            'id_account': userObj.ID_USER.pk,
+            'email': userObj.ID_USER.username,
+        }
     }
     return responseBody
 
 
-@router.post('pembeli/scan-meat')
+@router.post('scan-meat/')
 def scanDaging(request, id_pembeli: int = Form(...), file: UploadedFile = File(...)):
     try:
         gambar = file.read()
@@ -158,7 +161,7 @@ def scanDaging(request, id_pembeli: int = Form(...), file: UploadedFile = File(.
     }
 
 
-@router.get('pembeli/scan-history/{id}', response=List[SchemasBody.ScanHistoryResponse])
+@router.get('scan-history/{id}', response=List[SchemasBody.ScanHistoryResponse])
 def scanHistory(request, id: int):
     histroyObjs = ScanHistroyDB.objects.filter(ID_Pembeli=id)
     return histroyObjs

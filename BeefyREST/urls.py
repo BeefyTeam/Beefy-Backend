@@ -4,6 +4,7 @@ from ninja.security import HttpBearer
 from BeefyREST.views import validTokenCheck
 from BeefyREST.views import router as routerMain
 from Pembeli.views import router as routerPembeli
+from Penjual.views import router as routerPenjual
 
 
 class AuthBearer(HttpBearer):
@@ -23,6 +24,7 @@ api = NinjaAPI(
 
 api.add_router('auth/', routerMain)
 api.add_router('pembeli/', routerPembeli)
+api.add_router('penjual/', routerPenjual)
 
 
 @api.get("/", auth=AuthBearer())
