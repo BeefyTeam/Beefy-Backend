@@ -1,5 +1,4 @@
 import requests
-from django.shortcuts import render
 from ninja import NinjaAPI, Router
 from Penjual import schemas as SchemasBody
 from Penjual.models import PenjualDB, ProdukDB
@@ -61,22 +60,23 @@ def registerPenjual(request, payload: SchemasBody.RegisterBody = Form(...)):
 
     return {
         'message': 'success create account penjual',
-        'id_penjual': userNew.pk,
+        'id_user': userNew.pk,
+        'id_toko': penjualNew.pk,
         'nama_toko': penjualNew.nama_toko
     }
 
 @router.post('edit-penjual/')
 def editPenjual(request, payload: SchemasBody.EditPenjualBody = Form(...)):
-    penjualGet = PenjualDB.objects.filter(ID_USER_id=payload.id_penjual)
+    penjualGet = PenjualDB.objects.filter(ID_USER_id=payload.id_user)
     if (not penjualGet):
         return app.create_response(
             request,
-            {'message': f'Penjual with id {payload.id_penjual} not found'},
+            {'message': f'Penjual with id {payload.id_user} not found'},
             status=404
         )
 
     try:
-        penjualObj = PenjualDB.objects.get(ID_USER_id=payload.id_penjual)
+        penjualObj = PenjualDB.objects.get(ID_USER_id=payload.id_user)
         penjualObj.rekening = payload.rekening
         penjualObj.metode_pembayaran = payload.metode_pembayaran
         penjualObj.alamat_lengkap = payload.alamat_lengkap
@@ -89,7 +89,7 @@ def editPenjual(request, payload: SchemasBody.EditPenjualBody = Form(...)):
             {'message': 'Error with database when edit data penjual'},
             status=500
         )
-    return {'message': f'success edit data penjual for penjual id {payload.id_penjual}'}
+    return {'message': f'success edit data penjual for user id {payload.id_user}'}
 
 @router.post('edit-pp-penjual/')
 def editPhotoProfile(request, id_penjual: int = Form(...), file: UploadedFile = File(...)):
@@ -133,7 +133,7 @@ def addProduct(request, payload: SchemasBody.ProductAddBody = Form(...), file: U
 
     try:
         productBaru = ProdukDB.objects.create(
-            ID_PENJUAL=payload.id_penjual,
+            ID_PENJUAL=PenjualDB.objects.get(ID_USER_id=payload.id_penjual).pk,
             nama_barang=payload.nama_barang,
             deskripsi=payload.deskripsi,
             gambar=urlGambar,

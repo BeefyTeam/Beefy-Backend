@@ -8,7 +8,7 @@ class RegisterBody(Schema):
 
 
 class EditAlamatBody(Schema):
-    id_pembeli: str
+    id_user: str
     nama: str = 'Your name'
     alamat_lengkap: str = 'Your Address'
     nama_penerima: str = 'Your Name Receiver'
@@ -24,3 +24,22 @@ class ScanHistoryResponse(Schema):
     segar: bool
     level_kesegaran: int
     jenis: str
+
+
+class StoresResponse(Schema):
+    pk: int
+    logo_toko: str
+    nama_toko: str
+    rekening: str
+    metode_pembayaran: str
+    alamat_lengkap: str
+    nomor_telp: str
+    jam_operasional_buka: str
+    jam_operasional_tutup: str
+
+class ProductsResponse(Schema):
+    pk: int
+    ID_PENJUAL: int
+    nama_barang: str
+    deskripsi: str
+    harga: float

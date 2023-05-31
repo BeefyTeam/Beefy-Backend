@@ -7,7 +7,7 @@ class RegisterBody(Schema):
     password: str
 
 class EditPenjualBody(Schema):
-    id_penjual: int
+    id_user: int
     alamat_lengkap: str
     jam_operasional_buka: str
     jam_operasional_tutup: str

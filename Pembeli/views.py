@@ -9,6 +9,8 @@ from typing import List
 import requests
 from datetime import datetime
 
+from Penjual.models import PenjualDB, ProdukDB
+
 app = NinjaAPI()
 
 # Create your views here.
@@ -45,16 +47,16 @@ def register(request, payload: SchemasBody.RegisterBody = Form(...)):
     )
     return {
         'message': 'register success',
-        'id_pembeli': pembeliNew.ID_USER.pk
+        'id_user': pembeliNew.ID_USER.pk
     }
 
 
 @router.post('edit-pembeli/')
 def editPembelit(request, payload: SchemasBody.EditAlamatBody = Form(...)):
-    print(payload.id_pembeli)
-    pembeliObj = PembeliDB.objects.filter(ID_USER_id=int(payload.id_pembeli)).exists()
+    print(payload.id_user)
+    pembeliObj = PembeliDB.objects.filter(ID_USER_id=int(payload.id_user)).exists()
     if (pembeliObj):
-        pembeliObj = PembeliDB.objects.get(ID_USER_id=payload.id_pembeli)
+        pembeliObj = PembeliDB.objects.get(ID_USER_id=payload.id_user)
         pembeliObj.nama = payload.nama
         pembeliObj.alamat_lengkap = payload.alamat_lengkap
         pembeliObj.nama_penerima = payload.nama_penerima
@@ -64,15 +66,15 @@ def editPembelit(request, payload: SchemasBody.EditAlamatBody = Form(...)):
     else:
         return app.create_response(
             request,
-            {'message': f'Pembeli with id {payload.id_pembeli} Not Found'},
+            {'message': f'Pembeli with id {payload.id_user} Not Found'},
             status=404
         )
-    return {'message': f'Success edit alamat for pembeli id {payload.id_pembeli}'}
+    return {'message': f'Success edit alamat for user id {payload.id_user}'}
 
 
 @router.post('edit-pp-pembeli/')
-def editPhotoPembeli(request, id_pembeli: int = Form(...), file: UploadedFile = File(...)):
-    userPembeliObj = PembeliDB.objects.filter(ID_USER_id=id_pembeli).exists()
+def editPhotoPembeli(request, id_user: int = Form(...), file: UploadedFile = File(...)):
+    userPembeliObj = PembeliDB.objects.filter(ID_USER_id=id_user).exists()
     if (userPembeliObj):
         responeImgBB = requests.post('https://api.imgbb.com/1/upload', params={
             'key': '1a30bea6baf246a32e390350c7efa81c'
@@ -81,13 +83,13 @@ def editPhotoPembeli(request, id_pembeli: int = Form(...), file: UploadedFile = 
         }).json()
         urlGambar = responeImgBB['data']['display_url']
 
-        userPembeliObj = PembeliDB.objects.get(ID_USER_id=id_pembeli)
+        userPembeliObj = PembeliDB.objects.get(ID_USER_id=id_user)
         userPembeliObj.photo_profile = urlGambar
         userPembeliObj.save()
     else:
         return app.create_response(
             request,
-            {'message': f'User pembeli with id {id_pembeli} not found'},
+            {'message': f'User pembeli with id {id_user} not found'},
             status=404
         )
     return {'message': 'Success Edit photo profile'}
@@ -165,3 +167,43 @@ def scanDaging(request, id_pembeli: int = Form(...), file: UploadedFile = File(.
 def scanHistory(request, id: int):
     histroyObjs = ScanHistroyDB.objects.filter(ID_Pembeli=id)
     return histroyObjs
+
+@router.get('store/profile/{id}')
+def getProfileStore(request, id: int):
+    userObj = PenjualDB.objects.filter(pk=id).exists()
+    if (not userObj):
+        return app.create_response(
+            request,
+            {'message': f'User penjual with id {id} not found'},
+            status=404
+        )
+    userObj = PenjualDB.objects.get(pk=id)
+    responseBody = {
+        'logo_toko': userObj.logo_toko,
+        'nama_toko': userObj.nama_toko,
+        'rekening': userObj.rekening,
+        'metode_pembayaran': userObj.metode_pembayaran,
+        'alamat_lengkap': userObj.alamat_lengkap,
+        'nomor_telp': userObj.nomor_telp,
+        'jam_operasional_buka': userObj.jam_operasional_buka,
+        'jam_operasional_tutup': userObj.jam_operasional_tutup,
+        'user_account': {
+            'email': userObj.ID_USER.username,
+        }
+    }
+    return responseBody
+
+@router.get('get-stores/', response=List[SchemasBody.StoresResponse])
+def getStores(request):
+    stores = PenjualDB.objects.all()
+    return stores
+
+@router.get('search-toko/{toko}', response=List[SchemasBody.StoresResponse])
+def searcToko(request, toko: str):
+    getStores = PenjualDB.objects.filter(nama_toko__contains=toko)
+    return getStores
+
+@router.get('search-product/{product}', response=List[SchemasBody.ProductsResponse])
+def searchProduct(request, product: str):
+    getProducts =ProdukDB.objects.filter(nama_barang__contains=product)
+    return getProducts
