@@ -1,4 +1,5 @@
 from ninja import Schema
+from datetime import datetime
 
 class RegisterBody(Schema):
     nama: str = 'Your Name'
@@ -17,5 +18,9 @@ class EditAlamatBody(Schema):
 class EditPhotoProfile(Schema):
     id_pembeli: int
 
-class NewHistory(Schema):
-    id_pembeli: int
+class ScanHistoryResponse(Schema):
+    gambar_url: str
+    tanggal: datetime
+    segar: bool
+    level_kesegaran: int
+    jenis: str

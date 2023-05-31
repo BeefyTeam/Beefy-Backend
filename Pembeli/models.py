@@ -22,7 +22,9 @@ class ScanHistroyDB(models.Model):
     ID_Pembeli = models.IntegerField()
     gambar_url = models.CharField(max_length=255)
     tanggal = models.DateTimeField()
-    hasil = models.CharField(max_length=10)
+    segar = models.BooleanField(default=False)
+    level_kesegaran = models.IntegerField(default=0)
+    jenis = models.CharField(max_length=5, default='sapi')
 
     def __str__(self):
         return f'{self.pk} | {self.gambar_url}'

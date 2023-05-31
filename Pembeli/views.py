@@ -1,9 +1,13 @@
 from django.contrib.auth.models import User
 from Pembeli import schemas as SchemasBody
-from Pembeli.models import PembeliDB
+from Pembeli.models import PembeliDB, ScanHistroyDB
 from ninja import Router
 from ninja import Form, NinjaAPI
+from ninja import File
+from ninja.files import UploadedFile
+from typing import List
 import requests
+from datetime import datetime
 
 app = NinjaAPI()
 
@@ -66,10 +70,6 @@ def editPembelit(request, payload: SchemasBody.EditAlamatBody = Form(...)):
     return {'message': f'Success edit alamat for pembeli id {payload.id_pembeli}'}
 
 
-from ninja import File
-from ninja.files import UploadedFile
-
-
 @router.post('edit-pp-pembeli')
 def editPhotoPembeli(request, id_pembeli: int = Form(...), file: UploadedFile = File(...)):
     userPembeliObj = PembeliDB.objects.filter(ID_USER_id=id_pembeli).exists()
@@ -115,3 +115,50 @@ def getPembeliDetail(request, id: int):
     return responseBody
 
 
+@router.post('pembeli/scan-meat')
+def scanDaging(request, id_pembeli: int = Form(...), file: UploadedFile = File(...)):
+    try:
+        gambar = file.read()
+        responeImgBB = requests.post('https://api.imgbb.com/1/upload', params={
+            'key': '1a30bea6baf246a32e390350c7efa81c'
+        }, files={
+            'image': gambar
+        }).json()
+        urlGambar = responeImgBB['data']['display_url']
+
+        responeModelApi = requests.post('https://model-beefy-33n3233q4q-uc.a.run.app/predict/', params={
+        }, files={
+            'fileUpload': gambar
+        }).json()
+    except:
+        return app.create_response(
+            request,
+            {'message': 'Error communication with model API'},
+            status=500
+        )
+
+    print(responeModelApi)
+
+    ScanHistroyDB.objects.create(
+        ID_Pembeli=id_pembeli,
+        gambar_url=urlGambar,
+        tanggal=datetime.now(),
+        segar=True if responeModelApi['label'] == 'fresh' else False,
+        level_kesegaran=int(float(str(responeModelApi['kesegaran']).replace('%', ''))),
+        jenis='sapi'
+    )
+    return {
+        'message': 'Meat Scan Success',
+        'data': {
+            'url_gambar': urlGambar,
+            'hasil': responeModelApi['label'],
+            'level_kesegaran': responeModelApi['kesegaran'],
+            'jenis': 'sapi'
+        }
+    }
+
+
+@router.get('pembeli/scan-history/{id}', response=List[SchemasBody.ScanHistoryResponse])
+def scanHistory(request, id: int):
+    histroyObjs = ScanHistroyDB.objects.filter(ID_Pembeli=id)
+    return histroyObjs
