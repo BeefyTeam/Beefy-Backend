@@ -129,7 +129,7 @@ def scanDaging(request, id_pembeli: int = Form(...), file_image: UploadedFile = 
         }).json()
         urlGambar = responeImgBB['data']['display_url']
 
-        responeModelApi = requests.post('https://model-beefy-33n3233q4q-uc.a.run.app/predict/', params={
+        responeModelApi = requests.post('https://beefy-model-33n3233q4q-et.a.run.app/predict/', params={
         }, files={
             'fileUpload': gambar
         }).json()
