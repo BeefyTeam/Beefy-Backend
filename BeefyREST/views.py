@@ -7,6 +7,8 @@ from rest_framework_simplejwt.serializers import TokenVerifySerializer, TokenRef
 from BeefyREST import schemas as SchemasBody
 from django.shortcuts import render
 from ninja import NinjaAPI, Form
+from Penjual.models import PenjualDB
+from Pembeli.models import PembeliDB
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -82,6 +84,13 @@ def login(request, payload: SchemasBody.LoginBody = Form(...)):
         'id_user': userObj.pk,
         'jenis_akun': 'penjual' if userObj.is_staff else 'pembeli'
     }
+    if (userObj.is_staff):
+        akunObj = PenjualDB.objects.get(ID_USER_id=userObj.pk)
+        additional['id_toko'] = akunObj.pk
+    else:
+        akunObj = PembeliDB.objects.get(ID_USER_id=userObj.pk)
+        additional['id_pembeli'] = akunObj.pk
+
     return additional | token
 
 
