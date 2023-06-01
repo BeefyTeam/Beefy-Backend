@@ -10,8 +10,22 @@ from Order.views import router as routerOrder
 
 class AuthBearer(HttpBearer):
     def authenticate(self, request, token):
+        print(request.path)
+        pathList = [
+            '/api/pembeli/register-pembeli/',
+            '/api/pembeli/edit-pembeli/',
+            '/api/pembeli/edit-pp-pembeli/',
+            '/api/penjual/register-penjual/',
+            '/api/penjual/edit-pp-penjual/',
+            '/api/penjual/edit-penjual/'
+        ]
         if (validTokenCheck(token=token)):
             return token
+        elif (token == 'DAFTAR'):
+            if (request.path in pathList):
+                return True
+            else:
+                pass
         else:
             pass
 
