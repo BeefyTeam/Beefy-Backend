@@ -108,22 +108,34 @@ def uploadBuktiBayar(request, id_order: int = Form(...), file_image: UploadedFil
     return {'message': 'success upload bukti bayar'}
 
 @router.get('order-in-process/', response=List[SchemasBody.OrderProceessResponse])
-def orderProcess(request, id_pembeli: int):
-    orderProcessObj = Orders.objects.filter(ID_PEMBELI=id_pembeli, status='Diproses')
-    return orderProcessObj
+def orderProcess(request, id_pembeli: int = None, id_toko:int = None):
+    if (id_toko is None):
+        orderProcessObj = Orders.objects.filter(ID_PEMBELI=id_pembeli, status='Diproses')
+        return orderProcessObj
+    elif (id_pembeli is None):
+        orderProcessObj = Orders.objects.filter(ID_TOKO=id_toko, status='Diproses')
+        return orderProcessObj
 
 @router.get('order-in-waiting/', response=List[SchemasBody.OrderProceessResponse])
-def orderWaiting(request, id_pembeli: int):
-    orderWaitingObj = Orders.objects.filter(ID_PEMBELI=id_pembeli, status='Menunggu')
-    return orderWaitingObj
+def orderWaiting(request, id_pembeli: int = None, id_toko:int = None):
+    if (id_toko is None):
+        orderProcessObj = Orders.objects.filter(ID_PEMBELI=id_pembeli, status='Menunggu')
+        return orderProcessObj
+    elif (id_pembeli is None):
+        orderProcessObj = Orders.objects.filter(ID_TOKO=id_toko, status='Menunggu')
+        return orderProcessObj
 
 @router.get('order-in-complete/', response=List[SchemasBody.OrderProceessResponse])
-def orderComplete(request, id_pembeli: int):
-    orderCompleteObj = Orders.objects.filter(ID_PEMBELI=id_pembeli, status='Selesai')
-    return orderCompleteObj
+def orderComplete(request, id_pembeli: int = None, id_toko:int = None):
+    if (id_toko is None):
+        orderProcessObj = Orders.objects.filter(ID_PEMBELI=id_pembeli, status='Selesai')
+        return orderProcessObj
+    elif (id_pembeli is None):
+        orderProcessObj = Orders.objects.filter(ID_TOKO=id_toko, status='Selesai')
+        return orderProcessObj
 
 @router.get('orders/', response=List[SchemasBody.OrderProceessResponse])
-def orders(request, id_pembeli: int):
+def orders(request, id_pembeli: int = None, id_toko:int = None):
     ordersObj = Orders.objects.filter(ID_PEMBELI=id_pembeli)
     return ordersObj
 
