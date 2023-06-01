@@ -67,16 +67,16 @@ def registerPenjual(request, payload: SchemasBody.RegisterBody = Form(...)):
 
 @router.post('edit-penjual/')
 def editPenjual(request, payload: SchemasBody.EditPenjualBody = Form(...)):
-    penjualGet = PenjualDB.objects.filter(ID_USER_id=payload.id_user)
+    penjualGet = PenjualDB.objects.filter(pk=payload.id_toko)
     if (not penjualGet):
         return app.create_response(
             request,
-            {'message': f'Penjual with id {payload.id_user} not found'},
+            {'message': f'Penjual with id {payload.id_toko} not found'},
             status=404
         )
 
     try:
-        penjualObj = PenjualDB.objects.get(ID_USER_id=payload.id_user)
+        penjualObj = PenjualDB.objects.get(pk=payload.id_toko)
         penjualObj.rekening = payload.rekening
         penjualObj.metode_pembayaran = payload.metode_pembayaran
         penjualObj.alamat_lengkap = payload.alamat_lengkap
@@ -89,26 +89,26 @@ def editPenjual(request, payload: SchemasBody.EditPenjualBody = Form(...)):
             {'message': 'Error with database when edit data penjual'},
             status=500
         )
-    return {'message': f'success edit data penjual for user id {payload.id_user}'}
+    return {'message': f'success edit data toko for toko id {payload.id_toko}'}
 
 @router.post('edit-pp-penjual/')
-def editPhotoProfile(request, id_penjual: int = Form(...), file: UploadedFile = File(...)):
-    penjualGet = PenjualDB.objects.filter(ID_USER_id=id_penjual).exists()
+def editPhotoProfile(request, id_toko: int = Form(...), file_image: UploadedFile = File(...)):
+    penjualGet = PenjualDB.objects.filter(pk=id_toko).exists()
     if (not penjualGet):
         return app.create_response(
             request,
-            {'message': f'Penjual with id {id_penjual} not found'},
+            {'message': f'Penjual with toko id {id_toko} not found'},
             status=404
         )
     responeImgBB = requests.post('https://api.imgbb.com/1/upload', params={
         'key': '1a30bea6baf246a32e390350c7efa81c'
     }, files={
-        'image': file.read()
+        'image': file_image.read()
     }).json()
     urlGambar = responeImgBB['data']['display_url']
 
     try:
-        penjualObj = PenjualDB.objects.get(ID_USER_id=id_penjual)
+        penjualObj = PenjualDB.objects.get(pk=id_toko)
         penjualObj.logo_toko = urlGambar
         penjualObj.save()
     except:
@@ -122,57 +122,16 @@ def editPhotoProfile(request, id_penjual: int = Form(...), file: UploadedFile = 
         'url_gambar': urlGambar
     }
 
-@router.post('add-product/')
-def addProduct(request, payload: SchemasBody.ProductAddBody = Form(...), file: UploadedFile = File(...)):
-    responeImgBB = requests.post('https://api.imgbb.com/1/upload', params={
-        'key': '1a30bea6baf246a32e390350c7efa81c'
-    }, files={
-        'image': file.read()
-    }).json()
-    urlGambar = responeImgBB['data']['display_url']
-
-    try:
-        productBaru = ProdukDB.objects.create(
-            ID_PENJUAL=PenjualDB.objects.get(ID_USER_id=payload.id_penjual).pk,
-            nama_barang=payload.nama_barang,
-            deskripsi=payload.deskripsi,
-            gambar=urlGambar,
-            harga=float(payload.harga)
-        )
-    except:
-        return app.create_response(
-            request,
-            {'message': 'Error with database when add product'},
-            status=500
-        )
-
-    return {'message': 'Success add new product'}
-
-@router.get('get-products/{id}', response=List[SchemasBody.ProductsResponse])
-def getProducts(request, id: int):
-    try:
-        products = ProdukDB.objects.filter(
-            ID_PENJUAL=id
-        )
-    except:
-        return app.create_response(
-            request,
-            {'message': 'Error with database when get products'},
-            status=500
-        )
-    return products
-
-
-@router.get('user/detail/{id}')
-def getUserPenjual(request, id: int):
-    userObj = PenjualDB.objects.filter(ID_USER_id=id).exists()
+@router.get('user/detail/{id_toko}')
+def getUserPenjual(request, id_toko: int):
+    userObj = PenjualDB.objects.filter(pk=id_toko).exists()
     if (not userObj):
         return app.create_response(
             request,
-            {'message': f'User penjual with id {id} not found'},
+            {'message': f'Toko penjual with toko id {id_toko} not found'},
             status=404
         )
-    userObj = PenjualDB.objects.get(ID_USER_id=id)
+    userObj = PenjualDB.objects.get(pk=id_toko)
     responseBody = {
         'logo_toko':  userObj.logo_toko,
         'nama_toko': userObj.nama_toko,
@@ -189,8 +148,57 @@ def getUserPenjual(request, id: int):
     }
     return responseBody
 
+@router.post('add-product/')
+def addProduct(request, payload: SchemasBody.ProductAddBody = Form(...), file_image: UploadedFile = File(...)):
+    getToko = ProdukDB.objects.filter(pk=payload.id_toko).exists()
+    print(getToko)
+    if (not getToko):
+        return app.create_response(
+            request,
+            {'message': f'Toko with id {payload.id_toko} not found'},
+            status=404
+        )
+
+    responeImgBB = requests.post('https://api.imgbb.com/1/upload', params={
+        'key': '1a30bea6baf246a32e390350c7efa81c'
+    }, files={
+        'image': file_image.read()
+    }).json()
+    urlGambar = responeImgBB['data']['display_url']
+
+    try:
+        productBaru = ProdukDB.objects.create(
+            ID_TOKO=PenjualDB.objects.get(pk=payload.id_toko).pk,
+            nama_barang=payload.nama_barang,
+            deskripsi=payload.deskripsi,
+            gambar=urlGambar,
+            harga=float(payload.harga)
+        )
+    except:
+        return app.create_response(
+            request,
+            {'message': 'Error with database when add product'},
+            status=500
+        )
+
+    return {'message': 'Success add new product'}
+
+@router.get('get-products/{id_toko}', response=List[SchemasBody.ProductsResponse])
+def getProducts(request, id_toko: int):
+    try:
+        products = ProdukDB.objects.filter(
+            ID_TOKO=id_toko
+        )
+    except:
+        return app.create_response(
+            request,
+            {'message': 'Error with database when get products'},
+            status=500
+        )
+    return products
+
 @router.post('edit-product/')
-def editProduct(request, payload: SchemasBody.EditProductBody = Form(...), file: UploadedFile = File(...)):
+def editProduct(request, payload: SchemasBody.EditProductBody = Form(...), file_image: UploadedFile = File(...)):
     getProduct = ProdukDB.objects.filter(pk=payload.id_product).exists()
     if (not getProduct):
         return app.create_response(
@@ -201,7 +209,7 @@ def editProduct(request, payload: SchemasBody.EditProductBody = Form(...), file:
     responeImgBB = requests.post('https://api.imgbb.com/1/upload', params={
         'key': '1a30bea6baf246a32e390350c7efa81c'
     }, files={
-        'image': file.read()
+        'image': file_image.read()
     }).json()
     urlGambar = responeImgBB['data']['display_url']
     try:
@@ -219,23 +227,22 @@ def editProduct(request, payload: SchemasBody.EditProductBody = Form(...), file:
         )
     return {'message': 'edit product success'}
 
-
-@router.delete('delete-product/{id}')
-def deleteProduct(request, id:int):
-    getProduct = ProdukDB.objects.filter(pk=id).exists()
+@router.delete('delete-product/{id_product}')
+def deleteProduct(request, id_product: int):
+    getProduct = ProdukDB.objects.filter(pk=id_product).exists()
     if (not getProduct):
         return app.create_response(
             request,
-            {'message': f'product with id {id} not found'},
+            {'message': f'product with id {id_product} not found'},
             status=404
         )
     try:
-        getProduct = ProdukDB.objects.get(pk=id)
+        getProduct = ProdukDB.objects.get(pk=id_product)
         getProduct.delete()
     except:
         return app.create_response(
             request,
-            {'message': f'Error with database when delete product with id {id}'},
+            {'message': f'Error with database when delete product with id {id_product}'},
             status=500
         )
     return {'message': 'success delete product'}

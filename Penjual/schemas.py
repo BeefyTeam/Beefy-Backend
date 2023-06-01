@@ -7,7 +7,7 @@ class RegisterBody(Schema):
     password: str
 
 class EditPenjualBody(Schema):
-    id_user: int
+    id_toko: int
     alamat_lengkap: str
     jam_operasional_buka: str
     jam_operasional_tutup: str
@@ -15,14 +15,14 @@ class EditPenjualBody(Schema):
     rekening: str
 
 class ProductAddBody(Schema):
-    id_penjual: int
+    id_toko: int
     nama_barang: str
     deskripsi: str
     harga: float
 
 class ProductsResponse(Schema):
     pk: int
-    ID_PENJUAL: int
+    ID_TOKO: int
     nama_barang: str
     deskripsi: str
     harga: float

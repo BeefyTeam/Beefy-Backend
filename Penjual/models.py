@@ -20,7 +20,7 @@ class PenjualDB(models.Model):
         return f'{self.pk} | {self.nama_toko}'
 
 class ProdukDB(models.Model):
-    ID_PENJUAL = models.IntegerField()
+    ID_TOKO = models.IntegerField()
     nama_barang = models.CharField(max_length=255)
     deskripsi = models.TextField()
     gambar = models.CharField(max_length=255)

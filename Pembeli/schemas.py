@@ -7,16 +7,14 @@ class RegisterBody(Schema):
     password: str = '12345678'
 
 
-class EditAlamatBody(Schema):
-    id_user: str
+class EditPembeliBody(Schema):
+    id_pembeli: str
     nama: str = 'Your name'
     alamat_lengkap: str = 'Your Address'
     nama_penerima: str = 'Your Name Receiver'
     nomor_telp: str = 'Your Phone Number'
     label_alamat: str = 'Your Label Address'
 
-class EditPhotoProfile(Schema):
-    id_pembeli: int
 
 class ScanHistoryResponse(Schema):
     gambar_url: str
@@ -39,7 +37,7 @@ class StoresResponse(Schema):
 
 class ProductsResponse(Schema):
     pk: int
-    ID_PENJUAL: int
+    ID_TOKO: int
     nama_barang: str
     deskripsi: str
     harga: float
