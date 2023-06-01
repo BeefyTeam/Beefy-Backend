@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from Pembeli import schemas as SchemasBody
 from Pembeli.models import PembeliDB, ScanHistroyDB
+from Order.models import Orders
 from ninja import Router
 from ninja import Form, NinjaAPI
 from ninja import File
@@ -215,3 +216,56 @@ def searchProduct(request, product_name: str):
             status=404
         )
     return getProducts
+
+@router.get('get-all-products/', response=List[SchemasBody.ProductsResponse])
+def getProducts(request):
+    try:
+        products = ProdukDB.objects.all()
+    except:
+        return app.create_response(
+            request,
+            {'message': 'Error with database when get products'},
+            status=500
+        )
+    return products
+
+@router.get('get-products/{id_toko}', response=List[SchemasBody.ProductsResponse])
+def get_Products(request, id_toko: int):
+    try:
+        products = ProdukDB.objects.filter(
+            ID_TOKO=id_toko
+        )
+    except:
+        return app.create_response(
+            request,
+            {'message': 'Error with database when get products'},
+            status=500
+        )
+    return products
+
+@router.post('accept-order-complete/')
+def acceptOrderComplete(request, id_order: int = Form(...)):
+    if (not Orders.objects.filter(pk=id_order).exists()):
+        return app.create_response(
+            request,
+            {'message': f'Order with id {id_order} not found'},
+            status=404
+        )
+    orderObj = Orders.objects.get(pk=id_order)
+    if (orderObj.status == 'Menunggu'):
+        return app.create_response(
+            request,
+            {'message': f'Order with id {id_order} tidak bisa terima pesanan dari pembeli karna status masih Menunggu diterima seller'},
+            status=404
+        )
+    elif (orderObj.status == 'Selesai'):
+        return app.create_response(
+            request,
+            {'message': f'Order with id {id_order} telah selesai diterima oleh pembeli'},
+            status=404
+        )
+    else:
+        orderObj.status = 'Selesai'
+        orderObj.save()
+
+    return {'message': f'Pesanan dengan id {id_order} telah diterima oleh pembeli'}

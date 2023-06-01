@@ -4,6 +4,7 @@ from Penjual import schemas as SchemasBody
 from Penjual.models import PenjualDB, ProdukDB
 from django.contrib.auth.models import User
 from ninja import Form, File
+from Order.models import Orders, Pembayaran
 from ninja.files import UploadedFile
 from typing import List
 
@@ -246,4 +247,22 @@ def deleteProduct(request, id_product: int):
             status=500
         )
     return {'message': 'success delete product'}
+
+@router.get('get-orders/', response=List[SchemasBody.OrderResponse])
+def ordersList(request, id_toko: int):
+    ordersObj = Orders.objects.filter(ID_TOKO=id_toko)
+    return ordersObj
+
+@router.post('accept-order/')
+def acceptOrder(request, id_order: int = Form(...)):
+    if (not Orders.objects.filter(pk=id_order).exists()):
+        return app.create_response(
+            request,
+            {'message': f'Order with id {id_order} not found'},
+            status=404
+        )
+    orderObj = Orders.objects.get(pk=id_order)
+    orderObj.status = 'Diproses'
+    orderObj.save()
+    return {'message': f'Success Accept order with id {id_order}'}
 

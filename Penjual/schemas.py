@@ -1,4 +1,5 @@
 from ninja import Schema
+from datetime import datetime
 
 class RegisterBody(Schema):
     nama_toko: str
@@ -32,4 +33,16 @@ class EditProductBody(Schema):
     nama_barang: str
     deskripsi: str
     harga: float
+
+class OrderResponse(Schema):
+    pk: int
+    ID_PEMBAYARAN: int
+    ID_PEMBELI: int
+    ID_TOKO: int
+    ID_BARANG: int
+    catatan: str
+    alamat_pengiriman: str
+    metode_pembayaran: str
+    tanggal_order: datetime
+    status: str
 
