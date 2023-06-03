@@ -4,7 +4,7 @@ from Penjual import schemas as SchemasBody
 from Penjual.models import PenjualDB, ProdukDB
 from django.contrib.auth.models import User
 from ninja import Form, File
-from Order.models import Orders, Pembayaran
+from Order.models import Orders
 from ninja.files import UploadedFile
 from typing import List
 
@@ -35,9 +35,9 @@ def registerPenjual(request, payload: SchemasBody.RegisterBody = Form(...)):
     try:
         userNew = User.objects.create_user(
             username=payload.email,
-            email='account@email.com',
-            password=payload.password,
+            email='account@email.com'
         )
+        userNew.set_password(payload.password)
         userNew.is_staff = True
         userNew.save()
     except:
@@ -123,8 +123,8 @@ def editPhotoProfile(request, id_toko: int = Form(...), file_image: UploadedFile
         'url_gambar': urlGambar
     }
 
-@router.get('user/detail/{id_toko}')
-def getUserPenjual(request, id_toko: int):
+@router.get('user/detail/by-id-toko/{id_toko}')
+def getUserPenjualbyIdToko(request, id_toko: int):
     userObj = PenjualDB.objects.filter(pk=id_toko).exists()
     if (not userObj):
         return app.create_response(
@@ -134,6 +134,34 @@ def getUserPenjual(request, id_toko: int):
         )
     userObj = PenjualDB.objects.get(pk=id_toko)
     responseBody = {
+        'id_toko': userObj.pk,
+        'logo_toko':  userObj.logo_toko,
+        'nama_toko': userObj.nama_toko,
+        'rekening': userObj.rekening,
+        'metode_pembayaran': userObj.metode_pembayaran,
+        'alamat_lengkap': userObj.alamat_lengkap,
+        'nomor_telp': userObj.nomor_telp,
+        'jam_operasional_buka': userObj.jam_operasional_buka,
+        'jam_operasional_tutup': userObj.jam_operasional_tutup,
+        'user_account': {
+            'id_account': userObj.ID_USER.pk,
+            'email': userObj.ID_USER.username,
+        }
+    }
+    return responseBody
+
+@router.get('user/detail/by-id-account/{id_account}')
+def getUserPenjualbyIdAccount(request, id_account: int):
+    userObj = PenjualDB.objects.filter(ID_USER_id=id_account).exists()
+    if (not userObj):
+        return app.create_response(
+            request,
+            {'message': f'Toko penjual with account id {id_account} not found'},
+            status=404
+        )
+    userObj = PenjualDB.objects.get(ID_USER_id=id_account)
+    responseBody = {
+        'id_toko': userObj.pk,
         'logo_toko':  userObj.logo_toko,
         'nama_toko': userObj.nama_toko,
         'rekening': userObj.rekening,

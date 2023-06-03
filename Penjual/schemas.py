@@ -24,6 +24,7 @@ class ProductAddBody(Schema):
 class ProductsResponse(Schema):
     pk: int
     ID_TOKO: int
+    gambar: str
     nama_barang: str
     deskripsi: str
     harga: float
@@ -34,12 +35,18 @@ class EditProductBody(Schema):
     deskripsi: str
     harga: float
 
+
+class Barang(Schema):
+    nama_barang: str
+    deskripsi: str
+    gambar: str
+    harga: float
 class OrderResponse(Schema):
     pk: int
     ID_PEMBAYARAN: int
     ID_PEMBELI: int
     ID_TOKO: int
-    ID_BARANG: int
+    ID_BARANG: Barang
     catatan: str
     alamat_pengiriman: str
     metode_pembayaran: str

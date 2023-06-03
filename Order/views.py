@@ -47,10 +47,11 @@ def newOrder(request, payload: SchemasBody.NewOrderBody = Form(...)):
             ID_PEMBAYARAN=pembayaranObj.pk,
             ID_PEMBELI=int(payload.ID_PEMBELI),
             ID_TOKO=int(payload.ID_TOKO),
-            ID_BARANG=int(payload.ID_BARANG),
+            ID_BARANG=ProdukDB.objects.get(pk=int(payload.ID_BARANG)),
             catatan=payload.catatan,
             alamat_pengiriman=payload.alamat_pengiriman,
             metode_pembayaran=payload.metode_pembayaran,
+            total_barang=payload.total_barang
         )
 
     except:
@@ -133,6 +134,55 @@ def orderComplete(request, id_pembeli: int = None, id_toko:int = None):
     elif (id_pembeli is None):
         orderProcessObj = Orders.objects.filter(ID_TOKO=id_toko, status='Selesai')
         return orderProcessObj
+
+@router.get('detail/{id_order}')
+def getOrderDetail(request, id_order: int):
+    if (not Orders.objects.filter(pk=id_order).exists()):
+        return app.create_response(
+            request,
+            {'message': f'Order with id {id_order}'},
+            status=404
+        )
+
+    orderObj = Orders.objects.get(pk=id_order)
+    tokoObj = PenjualDB.objects.get(pk=orderObj.ID_TOKO)
+    pembayaranObj = Pembayaran.objects.get(pk=orderObj.ID_PEMBAYARAN)
+    pembeliObj = PembeliDB.objects.get(pk=orderObj.ID_PEMBELI)
+
+    responseBody = {
+        'message': f'Success get detail order for id order {id_order}',
+        'Barang': {
+            'nama barang': orderObj.ID_BARANG.nama_barang,
+            'harga barang': orderObj.ID_BARANG.harga,
+            'tanggal pesanan': orderObj.tanggal_order.date(),
+            'catatan': orderObj.catatan,
+            'total barang': orderObj.total_barang
+        },
+
+        'Bukti pembayaran': pembayaranObj.bukti_bayar,
+
+        'Toko': {
+            'logo toko': tokoObj.logo_toko,
+            'nama toko': tokoObj.nama_toko,
+            'nomor telepon toko': tokoObj.nomor_telp,
+            'alamat toko': tokoObj.alamat_lengkap
+        },
+
+        'Detail pembeli': {
+            'nama_penerima': pembeliObj.nama_penerima,
+            'alamat': pembeliObj.alamat_lengkap,
+            'nomor telepon pembeli': pembeliObj.nomor_telp
+        },
+
+        'Detail rincian': {
+            'harga barang': orderObj.ID_BARANG.harga,
+            'biaya pengiriman': pembayaranObj.biaya_pengiriman,
+            'kode unik': pembayaranObj.kode_unik,
+            'total harga': pembayaranObj.total_harga
+        }
+    }
+
+    return responseBody
 
 @router.get('orders/', response=List[SchemasBody.OrderProceessResponse])
 def orders(request, id_pembeli: int = None, id_toko:int = None):

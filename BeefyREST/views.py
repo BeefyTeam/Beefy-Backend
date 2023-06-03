@@ -1,13 +1,14 @@
 import random
 import rest_framework_simplejwt.exceptions
 from django.contrib.auth.models import User
+from django.shortcuts import redirect
 
 from ninja import Router
 from rest_framework_simplejwt.serializers import TokenVerifySerializer, TokenRefreshSerializer
 from BeefyREST import schemas as SchemasBody
 from django.shortcuts import render
 from ninja import NinjaAPI, Form
-from Penjual.models import PenjualDB
+from Penjual.models import PenjualDB, ProdukDB
 from Pembeli.models import PembeliDB
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -49,6 +50,141 @@ def index(request):
     print('Success Ganti Password')
     return render(request=request, template_name='index.html', context=contexs)
 
+def createDummy(request):
+    # Dummy Account Pembeli
+    User1 = User.objects.create(
+        username='Jeremi@gmail.com',
+        email='account@email.com',
+    )
+    User1.set_password('12345678')
+    User1.save()
+
+    Pembeli1 = PembeliDB.objects.create(
+        nama='Jeremi Herodian',
+        alamat_lengkap='Denpasar Selatan',
+        nama_penerima='Jeremi',
+        nomor_telp='081386049701',
+        label_alamat='Rumah',
+        photo_profile='https://i.ibb.co/945fj8Q/image.png',
+
+        ID_USER=User1
+    )
+
+    User2 = User.objects.create(
+        username='Udin@gmail.com',
+        email='account@email.com',
+        password='12345678'
+    )
+    User2.set_password('12345678')
+    User2.save()
+
+    Pembeli2 = PembeliDB.objects.create(
+        nama='Udin Pertama',
+        alamat_lengkap='Denpasar Utara',
+        nama_penerima='Udin',
+        nomor_telp='08123456789',
+        label_alamat='Kantor',
+        photo_profile='https://i.ibb.co/945fj8Q/image.png',
+
+        ID_USER=User2
+    )
+
+    # Dummy Account Penjual
+    User3 = User.objects.create(
+        username='Makmur@gmail.com',
+        email='account@email.com'
+    )
+    User3.set_password('12345678')
+    User3.is_staff = True
+    User3.save()
+
+    Penjual1 = PenjualDB.objects.create(
+        logo_toko='https://i.ibb.co/h9cfYrn/image.jpg',
+        nama_toko='Makmur Abadi',
+        rekening='354645864',
+        metode_pembayaran='Mandiri',
+        alamat_lengkap='Jakarta Selatan',
+        nomor_telp='09123667896',
+        jam_operasional_buka='07:00',
+        jam_operasional_tutup='22:00',
+
+        ID_USER=User3
+    )
+
+    User4 = User.objects.create(
+        username='Sukses@gmail.com',
+        email='account@email.com'
+    )
+    User4.set_password('12345678')
+    User4.is_staff = True
+    User4.save()
+
+    Penjual2 = PenjualDB.objects.create(
+        logo_toko='https://i.ibb.co/zH1Cwqb/image.png',
+        nama_toko='Sukses Jaya',
+        rekening='789645149',
+        metode_pembayaran='BCA',
+        alamat_lengkap='Surabaya',
+        nomor_telp='0912345678',
+        jam_operasional_buka='09:00',
+        jam_operasional_tutup='23:00',
+
+        ID_USER=User4
+    )
+
+
+    # Dummy Product Penjual
+    produks = [
+        [
+            Penjual1.pk,
+            'Wagyu A5',
+            'Daging Wagyu A5 Adalah daging dengan tekstur marbling lemak paling banyak. Daging ini berasal dari Jepang dengan kualitas yang premium',
+            'https://i.ibb.co/GR4WZG0/image.jpg',
+            2500000.0
+        ],
+        [
+            Penjual1.pk,
+            'Daging Sapi Bandung',
+            'Daging sapi Bandung kualitas terbaik, berasal dari ternak sapi yang berlokasi di Bandung dan memiliki sertifikasi Halal Nasional',
+            'https://i.ibb.co/2hmR6Jy/image.jpg',
+            500000.0
+        ],
+        [
+            Penjual1.pk,
+            'Sapi Kurban',
+            'Sapi kurban untuk hari raya idul adha',
+            'https://i.ibb.co/bN1vTGB/image.jpg',
+            8000000.0
+        ],
+
+        [
+            Penjual2.pk,
+            'Daging Sapi Reguler',
+            'Daging sapi biasa, cocok untuk masakan rumah dan rumah makan.',
+            'https://i.ibb.co/pWjnTx8/image.jpg',
+            400000.0
+        ],
+        [
+            Penjual2.pk,
+            'Daging Sapi GOLD',
+            'Daging sapi dengan taburan emas asli nih boss senggol dong',
+            'https://i.ibb.co/TT2wpN4/image.jpg',
+            3500000.0
+        ],
+    ]
+
+    for produk in produks:
+        buatProduk = ProdukDB.objects.create(
+            ID_TOKO=produk[0],
+            nama_barang=produk[1],
+            deskripsi=produk[2],
+            gambar=produk[3],
+            harga=produk[4]
+        )
+        print(f'Membuat produk {buatProduk.pk} | {buatProduk.nama_barang} Sukses')
+
+    return redirect('/')
+
 
 # Authentication Router
 router = Router(
@@ -81,7 +217,7 @@ def login(request, payload: SchemasBody.LoginBody = Form(...)):
         )
     userObj = User.objects.get(username=payload.email)
     additional = {
-        'id_user': userObj.pk,
+        'id_account': userObj.pk,
         'jenis_akun': 'penjual' if userObj.is_staff else 'pembeli'
     }
     if (userObj.is_staff):
