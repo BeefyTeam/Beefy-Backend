@@ -9,6 +9,8 @@ from ninja.files import UploadedFile
 from typing import List
 import requests
 from datetime import datetime
+from statistics import mode
+import numpy as np
 
 from Penjual.models import PenjualDB, ProdukDB
 
@@ -26,9 +28,9 @@ def register(request, payload: SchemasBody.RegisterBody = Form(...)):
     try:
         userNew = User.objects.create_user(
             username=payload.email,
-            email='account@email.com',
-            password=payload.password,
+            email='account@email.com'
         )
+        userNew.set_password(payload.password)
         userNew.is_staff = False
         userNew.save()
     except:
@@ -52,6 +54,7 @@ def register(request, payload: SchemasBody.RegisterBody = Form(...)):
         'id_pembeli': pembeliNew.pk
     }
 
+
 @router.post('edit-pembeli/')
 def editPembelit(request, payload: SchemasBody.EditPembeliBody = Form(...)):
     print(payload.id_pembeli)
@@ -71,6 +74,7 @@ def editPembelit(request, payload: SchemasBody.EditPembeliBody = Form(...)):
             status=404
         )
     return {'message': f'Success edit pembeli for pembeli id {payload.id_pembeli}'}
+
 
 @router.post('edit-pp-pembeli/')
 def editPhotoPembeli(request, id_pembeli: int = Form(...), file_image: UploadedFile = File(...)):
@@ -94,8 +98,9 @@ def editPhotoPembeli(request, id_pembeli: int = Form(...), file_image: UploadedF
         )
     return {'message': 'Success Edit photo profile'}
 
-@router.get('user/detail/{id_pembeli}')
-def getPembeliDetail(request, id_pembeli: int):
+
+@router.get('user/detail/by-id-pembeli/{id_pembeli}')
+def getPembeliDetailbyIDPembeli(request, id_pembeli: int):
     userObj = PembeliDB.objects.filter(pk=id_pembeli).exists()
     if (not userObj):
         return app.create_response(
@@ -105,6 +110,7 @@ def getPembeliDetail(request, id_pembeli: int):
         )
     userObj = PembeliDB.objects.get(pk=id_pembeli)
     responseBody = {
+        'id_pembeli': userObj.pk,
         'nama': userObj.nama,
         'alamat_lengkap': userObj.alamat_lengkap,
         'nama_penerima': userObj.nama_penerima,
@@ -117,6 +123,33 @@ def getPembeliDetail(request, id_pembeli: int):
         }
     }
     return responseBody
+
+
+@router.get('user/detail/by-id-account/{id_account}')
+def getPembeliDetailbyIDAccount(request, id_account: int):
+    userObj = PembeliDB.objects.filter(ID_USER_id=id_account).exists()
+    if (not userObj):
+        return app.create_response(
+            request,
+            {'message': f'Pembeli with account id {id_account} not found'},
+            status=404
+        )
+    userObj = PembeliDB.objects.get(ID_USER_id=id_account)
+    responseBody = {
+        'id_pembeli': userObj.pk,
+        'nama': userObj.nama,
+        'alamat_lengkap': userObj.alamat_lengkap,
+        'nama_penerima': userObj.nama_penerima,
+        'nomor_telp': userObj.nomor_telp,
+        'label_alamat': userObj.label_alamat,
+        'photo_profile': userObj.photo_profile,
+        'user_account': {
+            'id_account': userObj.ID_USER.pk,
+            'email': userObj.ID_USER.username,
+        }
+    }
+    return responseBody
+
 
 @router.post('scan-meat/')
 def scanDaging(request, id_pembeli: int = Form(...), file_image: UploadedFile = File(...)):
@@ -160,10 +193,12 @@ def scanDaging(request, id_pembeli: int = Form(...), file_image: UploadedFile = 
         }
     }
 
+
 @router.get('scan-history/{id_pembeli}', response=List[SchemasBody.ScanHistoryResponse])
 def scanHistory(request, id_pembeli: int):
     histroyObjs = ScanHistroyDB.objects.filter(ID_Pembeli=id_pembeli)
     return histroyObjs
+
 
 @router.get('store/profile/{id_toko}')
 def getProfileStore(request, id_toko: int):
@@ -190,10 +225,12 @@ def getProfileStore(request, id_toko: int):
     }
     return responseBody
 
+
 @router.get('get-stores/', response=List[SchemasBody.StoresResponse])
 def getStores(request):
     stores = PenjualDB.objects.all()
     return stores
+
 
 @router.get('search-toko/', response=List[SchemasBody.StoresResponse])
 def searcToko(request, toko_name: str):
@@ -206,9 +243,10 @@ def searcToko(request, toko_name: str):
         )
     return getStores
 
+
 @router.get('search-product/', response=List[SchemasBody.ProductsResponse])
 def searchProduct(request, product_name: str):
-    getProducts =ProdukDB.objects.filter(nama_barang__contains=product_name)
+    getProducts = ProdukDB.objects.filter(nama_barang__contains=product_name)
     if (len(getProducts) == 0):
         return app.create_response(
             request,
@@ -216,6 +254,7 @@ def searchProduct(request, product_name: str):
             status=404
         )
     return getProducts
+
 
 @router.get('get-all-products/', response=List[SchemasBody.ProductsResponse])
 def getProducts(request):
@@ -228,6 +267,7 @@ def getProducts(request):
             status=500
         )
     return products
+
 
 @router.get('get-products/{id_toko}', response=List[SchemasBody.ProductsResponse])
 def get_Products(request, id_toko: int):
@@ -243,6 +283,7 @@ def get_Products(request, id_toko: int):
         )
     return products
 
+
 @router.post('accept-order-complete/')
 def acceptOrderComplete(request, id_order: int = Form(...)):
     if (not Orders.objects.filter(pk=id_order).exists()):
@@ -255,7 +296,8 @@ def acceptOrderComplete(request, id_order: int = Form(...)):
     if (orderObj.status == 'Menunggu'):
         return app.create_response(
             request,
-            {'message': f'Order with id {id_order} tidak bisa terima pesanan dari pembeli karna status masih Menunggu diterima seller'},
+            {
+                'message': f'Order with id {id_order} tidak bisa terima pesanan dari pembeli karna status masih Menunggu diterima seller'},
             status=404
         )
     elif (orderObj.status == 'Selesai'):
@@ -269,3 +311,46 @@ def acceptOrderComplete(request, id_order: int = Form(...)):
         orderObj.save()
 
     return {'message': f'Pesanan dengan id {id_order} telah diterima oleh pembeli'}
+
+
+@router.get('get-trending-product', response=List[SchemasBody.ProductsResponse])
+def getTrendingProduct(request):
+    orders = Orders.objects.all()
+    barangIDList = list(orders.values_list('ID_BARANG', flat=True))
+    unik = list(np.unique(np.array(barangIDList)))
+    terlaris = []
+    for id_barang in unik:
+        terlaris.append((id_barang, barangIDList.count(id_barang)))
+    terlaris.sort(key=lambda x: x[1], reverse=True)
+    print(terlaris)
+
+    barang_terlaris = []
+    for i in range(5):
+        try:
+            barang = ProdukDB.objects.get(pk=terlaris[i][0])
+            barang_terlaris.append(barang)
+        except:
+            pass
+
+    return barang_terlaris
+
+@router.get('get-trending-store', response=List[SchemasBody.StoresResponse])
+def getTrendingStore(request):
+    orders = Orders.objects.all()
+    tokoIDList = list(orders.values_list('ID_TOKO', flat=True))
+    unik = list(np.unique(np.array(tokoIDList)))
+    trending = []
+    for id_barang in unik:
+        trending.append((id_barang, tokoIDList.count(id_barang)))
+    trending.sort(key=lambda x: x[1], reverse=True)
+    print(trending)
+
+    toko_terlaris = []
+    for i in range(5):
+        try:
+            toko = PenjualDB.objects.get(pk=trending[i][0])
+            toko_terlaris.append(toko)
+        except:
+            pass
+
+    return toko_terlaris

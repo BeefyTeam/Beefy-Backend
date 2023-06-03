@@ -1,8 +1,24 @@
 version: '3.9'
 
 services:
-  django:
-    image: django-docker:0.0.1
-    build: .
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_DATABASE: 'beefydb'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
+    volumes:
+      - ./data/mysql/db:/var/lib/mysql
+
+  app:
+    volumes:
+      - .:/django
     ports:
-      - "8000:8000"
+      - 8000:8000
+    image: app:django
+    container_name: django_container
+    command: bash -c "sleep 25 && python manage.py migrate &&python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      - db
+    build:
+      context: .
+      dockerfile: ./Dockerfile
