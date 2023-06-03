@@ -11,5 +11,3 @@ RUN python -m pip install --upgrade pip
 RUN pip install -r /code/requirements.txt
 
 COPY . .
-
-CMD ["python", "manage.py", "migrate"]
