@@ -40,4 +40,5 @@ class ProductsResponse(Schema):
     ID_TOKO: int
     nama_barang: str
     deskripsi: str
+    gambar: str
     harga: float
