@@ -53,7 +53,8 @@ def newOrder(request, payload: SchemasBody.NewOrderBody = Form(...)):
             metode_pembayaran=payload.metode_pembayaran,
             total_barang=payload.total_barang
         )
-
+        pembayaranObj.FK_Order = newOrderObj
+        pembayaranObj.save()
     except:
         return app.create_response(
             request,
@@ -183,6 +184,24 @@ def getOrderDetail(request, id_order: int):
     }
 
     return responseBody
+
+@router.get('order-belum-bayar/', response=List[SchemasBody.OrderBelumDibayarResponse])
+def orderBelumBayar(request, id_pembeli: int = None, id_toko: int = None):
+    if (id_toko is None):
+        orderObj = Pembayaran.objects.filter(FK_Order__ID_PEMBELI=id_pembeli, status='M')
+        return orderObj
+    elif (id_pembeli is None):
+        orderObj = Pembayaran.objects.filter(FK_Order__ID_TOKO=id_toko, status='M')
+        return orderObj
+
+@router.get('order-sudah-bayar/', response=List[SchemasBody.OrderBelumDibayarResponse])
+def orderSudahBayar(request, id_pembeli: int = None, id_toko: int = None):
+    if (id_toko is None):
+        orderObj = Pembayaran.objects.filter(FK_Order__ID_PEMBELI=id_pembeli, status='T')
+        return orderObj
+    elif (id_pembeli is None):
+        orderObj = Pembayaran.objects.filter(FK_Order__ID_TOKO=id_toko, status='T')
+        return orderObj
 
 @router.get('orders/', response=List[SchemasBody.OrderProceessResponse])
 def orders(request, id_pembeli: int = None, id_toko:int = None):
