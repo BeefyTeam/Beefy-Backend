@@ -1,24 +1,14 @@
 version: '3.9'
 
 services:
-  db:
-    image: mysql:latest
-    environment:
-      MYSQL_DATABASE: 'beefydb'
-      MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
-    volumes:
-      - ./data/mysql/db:/var/lib/mysql
-
   app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     volumes:
       - .:/django
     ports:
       - 8000:8000
-    image: app:django
+    image: gcr.io/impactful-study-385516/beefy-backend:v10
     container_name: django_container
-    command: bash -c "sleep 25 && python manage.py migrate &&python manage.py runserver 0.0.0.0:8000"
-    depends_on:
-      - db
-    build:
-      context: .
-      dockerfile: ./Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
