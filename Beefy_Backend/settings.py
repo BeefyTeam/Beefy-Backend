@@ -99,24 +99,24 @@ WSGI_APPLICATION = 'Beefy_Backend.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 # For Development
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
-# For Production
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'beefydb',
-#         'USER': 'root',
-#         'PASSWORD': '',
-#         'HOST': 'db',
-#         'PORT': '3306',
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
+
+# For Production
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'beefydb',
+        'USER': 'root',
+        'PASSWORD': 'admin123',
+        'HOST': '34.101.217.35',
+        'PORT': '3306',
+    }
+}
 
 
 # Password validation
