@@ -32,3 +32,12 @@ class OrderProceessResponse(Schema):
     metode_pembayaran: str
     tanggal_order: datetime
     status: str
+
+class OrderBelumDibayarResponse(Schema):
+    bukti_bayar: str
+    rekening: str
+    total_harga: float
+    biaya_pengiriman: float
+    kode_unik: int
+    FK_Order: OrderProceessResponse
+    status: str

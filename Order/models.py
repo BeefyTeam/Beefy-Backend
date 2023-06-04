@@ -3,22 +3,6 @@ from datetime import datetime
 from Penjual.models import ProdukDB
 
 # Create your models here.
-class Pembayaran(models.Model):
-    bukti_bayar = models.CharField(max_length=255)
-    rekening = models.CharField(max_length=15)
-    total_harga = models.FloatField()
-    biaya_pengiriman = models.FloatField()
-    kode_unik = models.IntegerField()
-
-    STATUS_PEMBAYARAN_CHOICES = (
-        ('M', 'Menunggu'),
-        ('T', 'Dibayar')
-    )
-    status = models.CharField(max_length=1, choices=STATUS_PEMBAYARAN_CHOICES, default='Menunggu')
-
-    def __str__(self):
-        return f'{self.id} | {self.kode_unik}'
-
 class Orders(models.Model):
     ID_PEMBAYARAN = models.IntegerField()
     ID_PEMBELI = models.IntegerField()
@@ -43,3 +27,24 @@ class Orders(models.Model):
 
     def __str__(self):
         return f'{self.id} | {self.tanggal_order}'
+
+class Pembayaran(models.Model):
+    bukti_bayar = models.CharField(max_length=255)
+    rekening = models.CharField(max_length=15)
+    total_harga = models.FloatField()
+    biaya_pengiriman = models.FloatField()
+    kode_unik = models.IntegerField()
+    FK_Order = models.ForeignKey(
+        Orders,
+        on_delete=models.SET_NULL,
+        null=True
+    )
+
+    STATUS_PEMBAYARAN_CHOICES = (
+        ('M', 'Menunggu'),
+        ('T', 'Dibayar')
+    )
+    status = models.CharField(max_length=1, choices=STATUS_PEMBAYARAN_CHOICES, default='Menunggu')
+
+    def __str__(self):
+        return f'{self.id} | {self.kode_unik}'
