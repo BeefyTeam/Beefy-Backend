@@ -1,6 +1,5 @@
 steps:
-  - name: "gcr.io/impactful-study-385516/beefy-backend:v10"
-    args:
-      - "-f"
-      - "docker-compose.yaml"
-      - "up"
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/impactful-study-385516/beefy-backend', '.']
+images:
+  - 'gcr.io/impactful-study-385516/beefy-backend'
