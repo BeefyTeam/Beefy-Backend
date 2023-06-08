@@ -181,7 +181,7 @@ def scanDaging(request, id_pembeli: int = Form(...), file_image: UploadedFile = 
         tanggal=datetime.now(),
         segar=True if responeModelApi['label'] == 'fresh' else False,
         level_kesegaran=int(float(str(responeModelApi['kesegaran']).replace('%', ''))),
-        jenis='sapi'
+        jenis='sapi' if responeModelApi['type'] == 'beef' else 'pork'
     )
     return {
         'message': 'Meat Scan Success',
@@ -189,7 +189,7 @@ def scanDaging(request, id_pembeli: int = Form(...), file_image: UploadedFile = 
             'url_gambar': urlGambar,
             'hasil': responeModelApi['label'],
             'level_kesegaran': responeModelApi['kesegaran'],
-            'jenis': 'sapi'
+            'jenis': 'sapi' if responeModelApi['type'] == 'beef' else 'pork'
         }
     }
 
@@ -234,7 +234,7 @@ def getStores(request):
 
 @router.get('search-toko/', response=List[SchemasBody.StoresResponse])
 def searcToko(request, toko_name: str):
-    getStores = PenjualDB.objects.filter(nama_toko__contains=toko_name)
+    getStores = PenjualDB.objects.filter(nama_toko__icontains=toko_name)
     if (len(getStores) == 0):
         return app.create_response(
             request,
@@ -246,11 +246,11 @@ def searcToko(request, toko_name: str):
 
 @router.get('search-product/', response=List[SchemasBody.ProductsResponse])
 def searchProduct(request, product_name: str):
-    getProducts = ProdukDB.objects.filter(nama_barang__contains=product_name)
+    getProducts = ProdukDB.objects.filter(nama_barang__icontains=product_name)
     if (len(getProducts) == 0):
         return app.create_response(
             request,
-            {'message': f'Toko with name {product_name} not found'},
+            {'message': f'Product with name {product_name} not found'},
             status=404
         )
     return getProducts
