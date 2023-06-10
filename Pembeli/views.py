@@ -193,6 +193,47 @@ def scanDaging(request, id_pembeli: int = Form(...), file_image: UploadedFile = 
         }
     }
 
+@router.post('save-scan-result/')
+def saveScanResult(request,
+               id_pembeli: int = Form(...),
+               label: str = Form(...),
+               level_kesegaran: int = Form(...),
+               type: str = Form(...),
+               file_image: UploadedFile = File(...)):
+    try:
+        gambar = file_image.read()
+        responeImgBB = requests.post('https://api.imgbb.com/1/upload', params={
+            'key': '1a30bea6baf246a32e390350c7efa81c'
+        }, files={
+            'image': gambar
+        }).json()
+        urlGambar = responeImgBB['data']['display_url']
+    except:
+        return app.create_response(
+            request,
+            {'message': 'Error communication with model API'},
+            status=500
+        )
+
+    historyObj = ScanHistroyDB.objects.create(
+        ID_Pembeli=id_pembeli,
+        gambar_url=urlGambar,
+        tanggal=datetime.now(),
+        segar=True if label == 'fresh' else False,
+        level_kesegaran=int(level_kesegaran),
+        jenis='sapi' if type == 'beef' else 'pork'
+    )
+    return {
+        'message': 'Save scan meat result success',
+        'data': {
+            'id_history': historyObj.pk,
+            'url_gambar': urlGambar,
+            'hasil': label,
+            'level_kesegaran': level_kesegaran,
+            'jenis': 'sapi' if type == 'beef' else 'pork'
+        }
+    }
+
 
 @router.get('scan-history/{id_pembeli}', response=List[SchemasBody.ScanHistoryResponse])
 def scanHistory(request, id_pembeli: int):
