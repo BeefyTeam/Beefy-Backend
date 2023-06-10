@@ -1,4 +1,4 @@
-# Beefy-ML-API
+# Beefy-Backend-API
 Deployment Repository of Beefy CMS Backend System for mobile app
 
 <div style="text-align:center"><img src="https://i.ibb.co/6X0KL3K/MODELS-3.png" alt="MODELS-1" border="0" /></div>
