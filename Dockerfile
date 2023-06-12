@@ -14,4 +14,4 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["gunicorn", "Beefy_Backend.wsgi:application", "-c", "gunicorn.py.ini"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
