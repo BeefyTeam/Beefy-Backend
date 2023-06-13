@@ -180,7 +180,7 @@ def scanDaging(request, id_pembeli: int = Form(...), file_image: UploadedFile = 
         gambar_url=urlGambar,
         tanggal=datetime.now(),
         segar=True if responeModelApi['label'] == 'fresh' else False,
-        level_kesegaran=int(float(str(responeModelApi['kesegaran']).replace('%', ''))),
+        level_kesegaran=int(float(str(responeModelApi['kesegaran']).replace('%', ''))) if str(responeModelApi['kesegaran']) != '-' else 0,
         jenis='sapi' if responeModelApi['type'] == 'beef' else 'pork'
     )
     return {

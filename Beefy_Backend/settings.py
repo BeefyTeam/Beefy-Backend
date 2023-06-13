@@ -113,7 +113,7 @@ DATABASES = {
         'NAME': 'beefydb',
         'USER': 'root',
         'PASSWORD': 'admin123',
-        'HOST': '34.101.217.35',
+        'HOST': '34.101.125.223',
         'PORT': '3306',
     }
 }
