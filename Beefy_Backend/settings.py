@@ -29,7 +29,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = ['http://localhost', 'https://beefy-backend-33n3233q4q-et.a.run.app']
+CSRF_TRUSTED_ORIGINS = ['http://localhost', 'https://beefy-be-b52v2foiya-et.a.run.app']
 
 
 # REST FRAMEWORK SETTINGS
