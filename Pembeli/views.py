@@ -33,10 +33,6 @@ router = Router(
     tags=['Pembeli endpoints']
 )
 
-from django.views import View
-from django.http.response import HttpResponse
-from django.middleware.csrf import get_token
-
 @router.post("register-pembeli/")
 def register(request, payload: SchemasBody.RegisterBody = Form(...)):
     try:
