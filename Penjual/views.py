@@ -1,4 +1,3 @@
-import requests
 from ninja import NinjaAPI, Router
 from Penjual import schemas as SchemasBody
 from Penjual.models import PenjualDB, ProdukDB
@@ -6,6 +5,7 @@ from django.contrib.auth.models import User
 from ninja import Form, File
 from Order.models import Orders
 from ninja.files import UploadedFile
+from Pembeli.views import Upload
 from typing import List
 
 app = NinjaAPI()
@@ -94,20 +94,20 @@ def editPenjual(request, payload: SchemasBody.EditPenjualBody = Form(...)):
 
 @router.post('edit-pp-penjual/')
 def editPhotoProfile(request, id_toko: int = Form(...), file_image: UploadedFile = File(...)):
-    penjualGet = PenjualDB.objects.filter(pk=id_toko).exists()
-    if (not penjualGet):
+    if (not PenjualDB.objects.filter(pk=id_toko).exists()):
         return app.create_response(
             request,
             {'message': f'Penjual with toko id {id_toko} not found'},
             status=404
         )
-    responeImgBB = requests.post('https://api.imgbb.com/1/upload', params={
-        'key': '1a30bea6baf246a32e390350c7efa81c'
-    }, files={
-        'image': file_image.read()
-    }).json()
-    urlGambar = responeImgBB['data']['display_url']
-
+    public_uri = Upload.upload_image(file_image, str(file_image.name).replace(' ', '-'))
+    if (public_uri is False):
+        return app.create_response(
+            request,
+            {'message': 'Error when upload process'},
+            status=500
+        )
+    urlGambar = str(public_uri)
     try:
         penjualObj = PenjualDB.objects.get(pk=id_toko)
         penjualObj.logo_toko = urlGambar
@@ -179,22 +179,20 @@ def getUserPenjualbyIdAccount(request, id_account: int):
 
 @router.post('add-product/')
 def addProduct(request, payload: SchemasBody.ProductAddBody = Form(...), file_image: UploadedFile = File(...)):
-    getToko = ProdukDB.objects.filter(pk=payload.id_toko).exists()
-    print(getToko)
-    if (not getToko):
+    if (not ProdukDB.objects.filter(pk=payload.id_toko).exists()):
         return app.create_response(
             request,
             {'message': f'Toko with id {payload.id_toko} not found'},
             status=404
         )
-
-    responeImgBB = requests.post('https://api.imgbb.com/1/upload', params={
-        'key': '1a30bea6baf246a32e390350c7efa81c'
-    }, files={
-        'image': file_image.read()
-    }).json()
-    urlGambar = responeImgBB['data']['display_url']
-
+    public_uri = Upload.upload_image(file_image, str(file_image.name).replace(' ', '-'))
+    if (public_uri is False):
+        return app.create_response(
+            request,
+            {'message': 'Error when upload process'},
+            status=500
+        )
+    urlGambar = str(public_uri)
     try:
         productBaru = ProdukDB.objects.create(
             ID_TOKO=PenjualDB.objects.get(pk=payload.id_toko).pk,
@@ -228,19 +226,20 @@ def getProducts(request, id_toko: int):
 
 @router.post('edit-product/')
 def editProduct(request, payload: SchemasBody.EditProductBody = Form(...), file_image: UploadedFile = File(...)):
-    getProduct = ProdukDB.objects.filter(pk=payload.id_product).exists()
-    if (not getProduct):
+    if (not ProdukDB.objects.filter(pk=payload.id_product).exists()):
         return app.create_response(
             request,
             {'message': f'product with id {payload.id_product} not found'},
             status=404
         )
-    responeImgBB = requests.post('https://api.imgbb.com/1/upload', params={
-        'key': '1a30bea6baf246a32e390350c7efa81c'
-    }, files={
-        'image': file_image.read()
-    }).json()
-    urlGambar = responeImgBB['data']['display_url']
+    public_uri = Upload.upload_image(file_image, str(file_image.name).replace(' ', '-'))
+    if (public_uri is False):
+        return app.create_response(
+            request,
+            {'message': 'Error when upload process'},
+            status=500
+        )
+    urlGambar = str(public_uri)
     try:
         getProduct = ProdukDB.objects.get(pk=payload.id_product)
         getProduct.gambar = urlGambar

@@ -1,7 +1,6 @@
 import random
 import rest_framework_simplejwt.exceptions
 from django.contrib.auth.models import User
-from django.shortcuts import redirect
 
 from ninja import Router
 from rest_framework_simplejwt.serializers import TokenVerifySerializer, TokenRefreshSerializer
@@ -11,6 +10,7 @@ from ninja import NinjaAPI, Form
 from Penjual.models import PenjualDB, ProdukDB
 from Pembeli.models import PembeliDB
 from functools import wraps
+from django.core.files.storage import default_storage
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -178,6 +178,7 @@ def admin_decorator(view_function):
 
 @admin_decorator
 def index(request):
+    print(default_storage.__class__)
     quotes = [
         "Beef. Yes. Roast beef. It's the Swedish term for beef that is roasted",
         "Not eating meat is a decision. Eating meat is an instinct.",

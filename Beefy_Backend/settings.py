@@ -13,10 +13,19 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 from datetime import timedelta
+from google.oauth2 import service_account
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+STORAGES = {
+    "default": {"BACKEND": "storages.backends.gcloud.GoogleCloudStorage"},
+    "staticfiles": {"BACKEND": "storages.backends.gcloud.GoogleCloudStorage"}
+}
+GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+    os.path.join(BASE_DIR, 'beefy-387408-6ccd9f846640.json')
+)
+GS_BUCKET_NAME = 'beefy-bucket'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -25,11 +34,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-9r1cj5coldnv0r*ena&nri#_3q=1uz!n4w7jw)9_qsnp(jwp3^'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = ['http://localhost', 'https://beefy-be-b52v2foiya-et.a.run.app']
+CSRF_TRUSTED_ORIGINS = ['http://localhost', 'https://beefy-ml-b52v2foiya-et.a.run.app']
 
 
 # REST FRAMEWORK SETTINGS

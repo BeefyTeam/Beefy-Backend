@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 class PenjualDB(models.Model):
-    logo_toko = models.CharField(max_length=255)
+    logo_toko = models.TextField()
     nama_toko = models.CharField(max_length=50, unique=True)
     rekening = models.CharField(max_length=12)
     metode_pembayaran = models.CharField(max_length=20)
@@ -23,7 +23,7 @@ class ProdukDB(models.Model):
     ID_TOKO = models.IntegerField()
     nama_barang = models.CharField(max_length=255)
     deskripsi = models.TextField()
-    gambar = models.CharField(max_length=255)
+    gambar = models.TextField()
     harga = models.FloatField()
 
     def __str__(self):

@@ -1,5 +1,4 @@
 from django.db import models
-from datetime import datetime
 from Penjual.models import ProdukDB
 
 # Create your models here.
@@ -29,7 +28,7 @@ class Orders(models.Model):
         return f'{self.id} | {self.tanggal_order}'
 
 class Pembayaran(models.Model):
-    bukti_bayar = models.CharField(max_length=255)
+    bukti_bayar = models.TextField()
     rekening = models.CharField(max_length=15)
     total_harga = models.FloatField()
     biaya_pengiriman = models.FloatField()

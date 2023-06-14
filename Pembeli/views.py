@@ -9,10 +9,21 @@ from ninja.files import UploadedFile
 from typing import List
 import requests
 from datetime import datetime
-from statistics import mode
 import numpy as np
-
 from Penjual.models import PenjualDB, ProdukDB
+
+from storages.backends.gcloud import GoogleCloudStorage
+storage = GoogleCloudStorage()
+class Upload:
+    @staticmethod
+    def upload_image(file, filename):
+        try:
+            target_path = 'gs://beefy-bucket/' + filename
+            path = storage.save(target_path, file)
+            return storage.url(path)
+        except Exception as e:
+            print("Failed to upload!")
+            return False
 
 app = NinjaAPI()
 
@@ -22,6 +33,9 @@ router = Router(
     tags=['Pembeli endpoints']
 )
 
+from django.views import View
+from django.http.response import HttpResponse
+from django.middleware.csrf import get_token
 
 @router.post("register-pembeli/")
 def register(request, payload: SchemasBody.RegisterBody = Form(...)):
@@ -78,17 +92,17 @@ def editPembelit(request, payload: SchemasBody.EditPembeliBody = Form(...)):
 
 @router.post('edit-pp-pembeli/')
 def editPhotoPembeli(request, id_pembeli: int = Form(...), file_image: UploadedFile = File(...)):
-    userPembeliObj = PembeliDB.objects.filter(pk=id_pembeli).exists()
-    if (userPembeliObj):
-        responeImgBB = requests.post('https://api.imgbb.com/1/upload', params={
-            'key': '1a30bea6baf246a32e390350c7efa81c'
-        }, files={
-            'image': file_image.read()
-        }).json()
-        urlGambar = responeImgBB['data']['display_url']
-
+    public_uri = Upload.upload_image(file_image, str(file_image.name).replace(' ', '-'))
+    if (public_uri is False):
+        return app.create_response(
+            request,
+            {'message': 'Error when upload process'},
+            status=500
+        )
+    if (PembeliDB.objects.filter(pk=id_pembeli).exists()):
+        urlGambar = str(public_uri)
         userPembeliObj = PembeliDB.objects.get(pk=id_pembeli)
-        userPembeliObj.photo_profile = urlGambar
+        userPembeliObj.photo_profile = str(urlGambar)
         userPembeliObj.save()
     else:
         return app.create_response(
@@ -154,17 +168,17 @@ def getPembeliDetailbyIDAccount(request, id_account: int):
 @router.post('scan-meat/')
 def scanDaging(request, id_pembeli: int = Form(...), file_image: UploadedFile = File(...)):
     try:
-        gambar = file_image.read()
-        responeImgBB = requests.post('https://api.imgbb.com/1/upload', params={
-            'key': '1a30bea6baf246a32e390350c7efa81c'
-        }, files={
-            'image': gambar
-        }).json()
-        urlGambar = responeImgBB['data']['display_url']
-
+        public_uri = Upload.upload_image(file_image, str(file_image.name).replace(' ', '-'))
+        if (public_uri is False):
+            return app.create_response(
+                request,
+                {'message': 'Error when upload process'},
+                status=500
+            )
+        urlGambar = str(public_uri)
         responeModelApi = requests.post('https://beefy-ml-b52v2foiya-et.a.run.app/predict/', params={
         }, files={
-            'fileUpload': gambar
+            'fileUpload': file_image.read()
         }).json()
     except:
         return app.create_response(
@@ -172,9 +186,7 @@ def scanDaging(request, id_pembeli: int = Form(...), file_image: UploadedFile = 
             {'message': 'Error communication with model API'},
             status=500
         )
-
     print(responeModelApi)
-
     ScanHistroyDB.objects.create(
         ID_Pembeli=id_pembeli,
         gambar_url=urlGambar,
@@ -201,20 +213,20 @@ def saveScanResult(request,
                type: str = Form(...),
                file_image: UploadedFile = File(...)):
     try:
-        gambar = file_image.read()
-        responeImgBB = requests.post('https://api.imgbb.com/1/upload', params={
-            'key': '1a30bea6baf246a32e390350c7efa81c'
-        }, files={
-            'image': gambar
-        }).json()
-        urlGambar = responeImgBB['data']['display_url']
+        public_uri = Upload.upload_image(file_image, str(file_image.name).replace(' ', '-'))
+        if (public_uri is False):
+            return app.create_response(
+                request,
+                {'message': 'Error when upload process'},
+                status=500
+            )
+        urlGambar = str(public_uri)
     except:
         return app.create_response(
             request,
             {'message': 'Error communication with model API'},
             status=500
         )
-
     historyObj = ScanHistroyDB.objects.create(
         ID_Pembeli=id_pembeli,
         gambar_url=urlGambar,

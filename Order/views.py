@@ -1,4 +1,3 @@
-import requests
 from ninja import NinjaAPI, Router, Form, File
 from ninja.files import UploadedFile
 from Order import schemas as SchemasBody
@@ -6,6 +5,7 @@ from Order.models import Orders, Pembayaran
 from Pembeli.models import PembeliDB
 from Penjual.models import PenjualDB, ProdukDB
 from typing import List
+from Pembeli.views import Upload
 
 # Create your views here.
 app = NinjaAPI()
@@ -88,13 +88,14 @@ def uploadBuktiBayar(request, id_order: int = Form(...), file_image: UploadedFil
             {'message': f'Pembayaran with id {orderObj.ID_PEMBAYARAN} not found'},
             status=404
         )
-    responeImgBB = requests.post('https://api.imgbb.com/1/upload', params={
-        'key': '1a30bea6baf246a32e390350c7efa81c'
-    }, files={
-        'image': file_image.read()
-    }).json()
-    urlGambar = responeImgBB['data']['display_url']
-
+    public_uri = Upload.upload_image(file_image, str(file_image.name).replace(' ', '-'))
+    if (public_uri is False):
+        return app.create_response(
+            request,
+            {'message': 'Error when upload process'},
+            status=500
+        )
+    urlGambar = str(public_uri)
     try:
         pembayaranObj = Pembayaran.objects.get(pk=orderObj.ID_PEMBAYARAN)
         pembayaranObj.bukti_bayar = urlGambar

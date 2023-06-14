@@ -8,7 +8,7 @@ class PembeliDB(models.Model):
     nama_penerima = models.CharField(max_length=100)
     nomor_telp = models.CharField(max_length=15)
     label_alamat = models.CharField(max_length=100)
-    photo_profile = models.CharField(max_length=255)
+    photo_profile = models.TextField()
 
     ID_USER = models.OneToOneField(
         User,
@@ -20,7 +20,7 @@ class PembeliDB(models.Model):
 
 class ScanHistroyDB(models.Model):
     ID_Pembeli = models.IntegerField()
-    gambar_url = models.CharField(max_length=255)
+    gambar_url =models.TextField()
     tanggal = models.DateTimeField()
     segar = models.BooleanField(default=False)
     level_kesegaran = models.IntegerField(default=0)
